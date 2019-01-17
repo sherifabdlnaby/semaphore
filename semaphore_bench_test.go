@@ -4,14 +4,12 @@
 
 // +build go1.7
 
-package semaphore_test
+package semaphore
 
 import (
 	"context"
 	"fmt"
 	"testing"
-
-	"golang.org/x/sync/semaphore"
 )
 
 // weighted is an interface matching a subset of *Weighted.  It allows
@@ -20,6 +18,7 @@ type weighted interface {
 	Acquire(context.Context, int64) error
 	TryAcquire(int64) bool
 	Release(int64)
+	Resize(int64)
 }
 
 // semChan implements Weighted using a channel for
@@ -54,6 +53,10 @@ func (s semChan) Release(n int64) {
 	}
 }
 
+func (s semChan) Resize(n int64) {
+	panic("not implemented mock method")
+}
+
 // acquireN calls Acquire(size) on sem N times and then calls Release(size) N times.
 func acquireN(b *testing.B, sem weighted, size int64, N int) {
 	b.ResetTimer()
@@ -86,7 +89,7 @@ func BenchmarkNewSeq(b *testing.B) {
 	for _, cap := range []int64{1, 128} {
 		b.Run(fmt.Sprintf("Weighted-%d", cap), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				_ = semaphore.NewWeighted(cap)
+				_ = NewWeighted(cap)
 			}
 		})
 		b.Run(fmt.Sprintf("semChan-%d", cap), func(b *testing.B) {
@@ -117,7 +120,7 @@ func BenchmarkAcquireSeq(b *testing.B) {
 			name string
 			w    weighted
 		}{
-			{"Weighted", semaphore.NewWeighted(c.cap)},
+			{"Weighted", NewWeighted(c.cap)},
 			{"semChan", newSemChan(c.cap)},
 		} {
 			b.Run(fmt.Sprintf("%s-acquire-%d-%d-%d", w.name, c.cap, c.size, c.N), func(b *testing.B) {

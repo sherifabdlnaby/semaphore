@@ -2,15 +2,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package semaphore_test
+package semaphore
 
 import (
 	"context"
 	"fmt"
 	"log"
 	"runtime"
-
-	"golang.org/x/sync/semaphore"
 )
 
 // Example_workerPool demonstrates how to use a semaphore to limit the number of
@@ -23,7 +21,7 @@ func Example_workerPool() {
 
 	var (
 		maxWorkers = runtime.GOMAXPROCS(0)
-		sem        = semaphore.NewWeighted(int64(maxWorkers))
+		sem        = NewWeighted(int64(maxWorkers))
 		out        = make([]int, 32)
 	)
 
