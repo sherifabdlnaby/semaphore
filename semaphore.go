@@ -199,3 +199,21 @@ func (s *Weighted) Resize(n int64) {
 	}
 	s.mu.Unlock()
 }
+
+// Current returns the current size of semaphore.
+// Returned value may instantly change after/during call. use for diagnostic and health-checking only.
+func (s *Weighted) Current() int64 {
+	return s.cur
+}
+
+// Size returns the maximum size of semaphore.
+// Returned value may instantly change after/during call. use for diagnostic and health-checking only.
+func (s *Weighted) Size() int64 {
+	return s.size
+}
+
+// Waiters returns the number of currently waiting Acquire calls.
+// Returned value may instantly change after/during call. use for diagnostic and health-checking only.
+func (s *Weighted) Waiters() int {
+	return s.waiters.Len() + s.impossibleWaiters.Len()
+}
