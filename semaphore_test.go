@@ -6,12 +6,12 @@ package semaphore
 
 import (
 	"context"
+	"golang.org/x/sync/errgroup"
 	"math/rand"
 	"runtime"
 	"sync"
 	"testing"
 	"time"
-	"golang.org/x/sync/errgroup"
 )
 
 const maxSleep = 1 * time.Millisecond
@@ -298,4 +298,35 @@ func TestWeightedResizeUnblockImpossible(t *testing.T) {
 
 	}
 
+}
+
+func TestGetters(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	type test struct{ curr, size, waiters int }
+
+	var tries []test
+
+	sem := NewWeighted(3)
+
+	sem.Acquire(ctx, 1)
+	sem.Acquire(ctx, 1)
+
+	tries = append(tries, test{curr: int(sem.Current()), size: int(sem.Size()), waiters: sem.Waiters()})
+
+	sem.Acquire(ctx, 1)
+	go sem.Acquire(ctx, 1)
+
+	time.Sleep(100 * time.Millisecond)
+
+	tries = append(tries, test{curr: int(sem.Current()), size: int(sem.Size()), waiters: sem.Waiters()})
+
+	want := []test{{2, 3, 0}, {3, 3, 1}}
+
+	for i := range tries {
+		if tries[i] != want[i] {
+			t.Errorf("tries[%d]: got %+v, want %+v", i, tries[i], want[i])
+		}
+	}
 }
